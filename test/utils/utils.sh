@@ -80,7 +80,7 @@ jenkins_updates () {
 	[ $(ucr get version/version) = "4.4" ] && echo -e "deb [trusted=yes] http://omar.knut.univention.de/build2/ ucs_5.0-0/\$(ARCH)/" >> /etc/apt/sources.list
 	[ $(ucr get version/version) = "4.4" ] && echo -e "deb [trusted=yes] http://omar.knut.univention.de/build2/ ucs_5.0-0-fbest-5.0/all/" >> /etc/apt/sources.list
 	[ $(ucr get version/version) = "4.4" ] && echo -e "deb [trusted=yes] http://omar.knut.univention.de/build2/ ucs_5.0-0-fbest-5.0/\$(ARCH)/" >> /etc/apt/sources.list
-	ucr set update43/checkfilesystems=no update44/checkfilesystems=no update50/checkfilesystems=no
+	ucr set update43/checkfilesystems=no update44/checkfilesystems=no update50/checkfilesystems=no 'update50/ignore_legacy_objects=yes'
 	local version_version version_patchlevel version_erratalevel target rc=0
 	target="$(echo "${JOB_NAME:-}"|sed -rne 's,.*/UCS-([0-9]+\.[0-9]+-[0-9]+)/.*,\1,p')"
 	# Update UCS@school instances always to latest patchlevel version
