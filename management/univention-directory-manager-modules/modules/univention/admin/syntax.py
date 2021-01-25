@@ -31,38 +31,39 @@
 
 from __future__ import absolute_import
 
-import re
-import ldap
-import operator
-import ipaddr
-import inspect
-import time
-import datetime
-import dateutil
 import base64
-import zlib
 import bz2
 import copy
-import json
-import sys
-import os
-import shlex
+import datetime
+import dateutil
 import imghdr
-import PIL
-import traceback
-from io import BytesIO
+import inspect
+import ipaddr
+import json
+import ldap
 import locale
+import operator
+import os
+import PIL
+import re
+import shlex
+import sys
+import time
+import traceback
+import zlib
+from io import BytesIO
 from operator import itemgetter
 
-import univention.debug as ud
+from ldap.filter import filter_format, escape_filter_chars
+
 import univention.admin.modules
 import univention.admin.uexceptions
 import univention.admin.types
+import univention.debug as ud
 from univention.admin import localization
 from univention.lib.ucs import UCS_Version
 from univention.lib.umc_module import get_mime_type, get_mime_description, image_mime_type_of_buffer
 
-from ldap.filter import filter_format, escape_filter_chars
 try:
 	from typing import Any, Callable, List, Optional, Pattern, Sequence, Tuple, Type, Union  # noqa F401
 	from univention.admin.uldap import access  # noqa F401
