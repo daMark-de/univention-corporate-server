@@ -10,4 +10,5 @@ desc: |
    repaired.
  * Added syntax class to select syntax class for Extended Attributes.
  * Made options in Extended Attributes selectable.
-bug: [52576, 52683, 25054]
+ * Made LDAP Object Class and Attribute names selectable.
+bug: [52576, 52683, 25054, 31857]
