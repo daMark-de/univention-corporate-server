@@ -9,4 +9,5 @@ desc: |
  * The --remove-option argument of the UDM CLI `create` command has been
    repaired.
  * Added syntax class to select syntax class for Extended Attributes.
-bug: [52576, 52683]
+ * Made options in Extended Attributes selectable.
+bug: [52576, 52683, 25054]
