@@ -27,6 +27,8 @@
 # /usr/share/common-licenses/AGPL-3; if not, see
 # <https://www.gnu.org/licenses/>.
 
+# shellcheck disable=SC2015
+
 set -x
 
 is_ec2 () {
@@ -55,18 +57,26 @@ basic_setup () {
 	fi
 	ucr set update/check/cron/enabled=false update/check/boot/enabled=false
 	service cron reload || true
-	# wait until Univention System Setup is running and profile file has been moved
-	while pgrep -f "/etc/init.d/rc 2" && ! pgrep -f "startxwithfirefox" ; do
-		sleep 1s
-	done
-	for i in $(seq 120); do
-		if [ -f /var/cache/univention-system-setup/profile.bak ] ; then
-			mv /var/cache/univention-system-setup/profile.bak /var/cache/univention-system-setup/profile
-			break
-		fi
-		echo "Waiting for /var/cache/univention-system-setup/profile.bak"
-		sleep 1
-	done
+	stop_uss_and_restore_profile
+}
+stop_uss_and_restore_profile () {
+	local SRV='univention-system-setup-boot.service' job
+	if [ loaded = "$(systemctl --property LoadState --value show "$SRV")" ]
+	then
+		# prevent future
+		systemctl mask "$SRV"
+		# cancel pending
+		job="$(systemctl --property Job --value show "$SRV")" &&
+			[ -n "$job" ] &&
+			systemctl cancel "$job" ||
+			:
+		# kill current
+		systemctl kill "$SRV"
+	fi
+
+	local PROFILE='/var/cache/univention-system-setup/profile'
+	[ -f "$PROFILE.bak" ] &&
+		mv "$PROFILE.bak" "$PROFILE"
 }
 
 rotate_logfiles () {
