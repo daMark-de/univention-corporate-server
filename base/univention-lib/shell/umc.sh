@@ -67,7 +67,7 @@ umc_frontend_new_hash () {
 	if [ -n "$DPKG_MAINTSCRIPT_PACKAGE" ]; then
 		# touch all html, js, css files from the package to prevent the mtime to be the package build time.
 		# the mtime needs to be the package extraction time, so that apache serves correct caching information
-		dpkg -L "$DPKG_MAINTSCRIPT_PACKAGE" | grep -e '\.js$' -e '\.html' | xargs touch
+		dpkg -L "$DPKG_MAINTSCRIPT_PACKAGE" | grep -e '\.js$' -e '\.html$' | xargs touch
 	fi
 
 	/usr/sbin/univention-config-registry set "umc/web/cache_bust=$(date +%s)"
