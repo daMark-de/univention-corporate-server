@@ -885,6 +885,18 @@ class Localesubdirname_and_GNUMessageCatalog(complex):
 	all_required = True
 
 
+class Localesubdirname_and_GNUMessageCatalog_umc(complex):
+	"""
+	Syntax for a UMC message catalog and its language.
+
+	See :py:class:`GNUMessageCatalog` and :py:class:`Localesubdirname`.
+	"""
+	delimiter = ': '
+	subsyntaxes = [(_('Locale subdir name'), string), (_('GNU message catalog'), GNUMessageCatalog)]
+	subsyntax_key_value = True
+	all_required = True
+
+
 class integer(simple):
 	"""
 	Syntax for positive numeric values.

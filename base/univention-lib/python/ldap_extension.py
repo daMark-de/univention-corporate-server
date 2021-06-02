@@ -299,6 +299,13 @@ class UniventionLDAPExtension(six.with_metaclass(ABCMeta)):
 				language = filename_parts[0]
 				with open(udm_module_messagecatalog, 'rb') as f:
 					common_udm_options.extend(["--append", "messagecatalog=%s %s" % (language, base64.b64encode(f.read()).decode('ASCII'),), ])
+
+			for umcmessagecatalog in options.umcmessagecatalog:
+				filename_parts = os.path.splitext(os.path.basename(umcmessagecatalog))
+				language = filename_parts[0].split('-', 1)[0]
+				with open(umcmessagecatalog, 'rb') as f:
+					common_udm_options.extend(["--append", "umcmessagecatalog=%s %s" % (language, base64.b64encode(f.read()).decode('ASCII'),), ])
+
 			if options.umcregistration:
 				try:
 					with open(options.umcregistration, 'rb') as f:
@@ -1224,6 +1231,11 @@ def ucs_registerLDAPExtension():
 		help="Gettext mo file", metavar="<GNU message catalog file>")
 	udm_module_options.add_option(
 		"--udm_module_messagecatalog", dest="udm_module_messagecatalog",
+		type="existing_filename", default=[],
+		action="callback", callback=option_callback_append_udm_module_options,
+		help="Gettext mo file", metavar="<GNU message catalog file>")
+	udm_module_options.add_option(
+		"--umcmessagecatalog", dest="umcmessagecatalog",
 		type="existing_filename", default=[],
 		action="callback", callback=option_callback_append_udm_module_options,
 		help="Gettext mo file", metavar="<GNU message catalog file>")

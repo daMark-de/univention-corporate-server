@@ -36,8 +36,10 @@ import os
 import bz2
 import traceback
 import subprocess
+import tempfile
 
 import apt
+import polib
 
 import listener
 
@@ -45,6 +47,7 @@ import univention.debug as ud
 import univention.admin.uldap as udm_uldap
 import univention.admin.modules as udm_modules
 import univention.admin.uexceptions as udm_errors
+from univention.lib.ldap_extension import safe_path_join
 from univention.lib.ucs import UCS_Version
 from univention.lib.umc_module import UMC_ICON_BASEDIR, imagecategory_of_buffer, default_filename_suffix_for_mime_type
 
@@ -57,6 +60,7 @@ PYSHARED_DIR = '/usr/share/pyshared/'
 PYTHON_DIR = '/usr/lib/python2.7/dist-packages/'
 PYSUPPORT_DIR = '/usr/share/python-support'
 LOCALE_BASEDIR = "/usr/share/locale"  # mo files go to /usr/share/locale/<language-tag>/LC_MESSAGES/
+LOCALE_BASEDIR_UMC = "/usr/share/univention-management-console/i18n"  # umc translation files go to /usr/share/univention-management-console/i18n/<language-tag>/<UMCModuleID>.mo
 MODULE_DEFINTION_BASEDIR = "/usr/share/univention-management-console/modules"  # UMC registration xml files go here
 EXTEND_PATH = "__path__ = __import__('pkgutil').extend_path(__path__, __name__)\n"  # do not change ever!
 
@@ -190,6 +194,7 @@ def handler(dn, new, old):
 			if not install_python_file(objectclass, target_subdir, new_relative_filename, new_object_data):
 				return
 			install_messagecatalog(dn, new, objectclass)
+			install_umcmessagecatalog(new, old)
 			if objectclass == 'univentionUDMModule':
 				install_umcregistration(dn, new)
 				install_umcicons(dn, new)
@@ -203,6 +208,7 @@ def handler(dn, new, old):
 		try:
 			remove_python_file(objectclass, target_subdir, old_relative_filename)
 			remove_messagecatalog(dn, old, objectclass)
+			remove_umcmessagecatalog(old)
 			if objectclass == 'univentionUDMModule':
 				remove_umcicons(dn, old)
 				remove_umcregistration(dn, old)
@@ -540,6 +546,52 @@ def remove_messagecatalog(dn, attrs, objectclass):
 			os.unlink(filename)
 		else:
 			ud.debug(ud.LISTENER, ud.INFO, '%s: Warning: %s does not exist.' % (name, filename))
+
+
+def install_umcmessagecatalog(attrs_new, attrs_old):
+	remove_umcmessagecatalog(attrs_old)
+	values = _umcmessagecatalog_ldap_attributes(attrs_new)
+	if not values:
+		return
+	for language_tag, mo_data_binary in values.items():
+		filename = _filename_from_tempfile(language_tag, mo_data_binary)
+		if not os.path.exists(os.path.dirname(filename)):
+			os.makedirs(os.path.dirname(filename))
+		with open(filename, 'w') as f:
+			f.write(mo_data_binary)
+
+
+def remove_umcmessagecatalog(attrs):
+	values = _umcmessagecatalog_ldap_attributes(attrs)
+	if not values:
+		return
+	for language_tag, mo_data_binary in values.items():
+		filename = _filename_from_tempfile(language_tag, mo_data_binary)
+		if not os.path.exists(filename):
+			ud.debug(ud.LISTENER, ud.INFO, '%s: Warning: %s does not exist.' % (name, filename))
+			continue
+		else:
+			ud.debug(ud.LISTENER, ud.INFO, '%s: Removing %s.' % (name, filename))
+			os.unlink(filename)
+
+
+def _umcmessagecatalog_ldap_attributes(attrs):
+	translationfile_ldap_attribute_and_tag_prefix = "univentionUMCMessageCatalog;entry-lang-"
+	values = {}
+	for ldap_attribute in attrs.keys():
+		if ldap_attribute.startswith(translationfile_ldap_attribute_and_tag_prefix):
+			language_tag = ldap_attribute.split(translationfile_ldap_attribute_and_tag_prefix, 1)[1]
+			values[language_tag] = attrs.get(ldap_attribute)[0]
+	return values
+
+
+def _filename_from_tempfile(language_tag, mo_data_binary):
+	with tempfile.NamedTemporaryFile(suffix='mo') as fp:
+		fp.write(mo_data_binary)
+		fp.flush()
+		appname = polib.mofile(fp.name).metadata['UMCModuleID']
+		basedir = os.path.join(LOCALE_BASEDIR_UMC, language_tag.replace('/', '-'))
+	return safe_path_join(basedir, '%s.mo' % (appname,))
 
 
 def install_umcregistration(dn, attrs):
